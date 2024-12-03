@@ -11,7 +11,7 @@ name = "fulytic_logic"
 
 [workspace]
 resolver = "2"
-members = ["fulytic-core"]
+members = ["fulytic-core", "fulytic-macro"]
 
 [workspace.package]
 version = "0.1.0"
@@ -19,6 +19,7 @@ edition = "2021"
 
 [workspace.dependencies]
 fulytic-core = { path = "fulytic-core" }
+fulytic-macro = { path = "fulytic-macro" }
 
 # ser/de and that related
 serde = { version = "1.0", features = ["derive"] }
@@ -33,6 +34,11 @@ thiserror = "2.0"
 itertools = "0.13"
 tinyvec = "1.8"
 enum-map = "2.7"
+
+# macros
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = "2.0"
 
 [workspace.lints.rust]
 nonstandard_style = { level = "warn", priority = -1 }
