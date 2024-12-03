@@ -1,0 +1,48 @@
+[package]
+name = "fulytic-logic"
+version = "0.1.0"
+edition = "2021"
+description = "The logic layer of the Fulytic project (game logic, NPC AI, etc.)"
+
+[dependencies]
+
+[lib]
+name = "fulytic_logic"
+
+[workspace]
+resolver = "2"
+members = ["fulytic-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+fulytic-core = { path = "fulytic-core" }
+
+# ser/de and that related
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde-inline-default = "0.2"
+
+# math
+num = "0.4"
+
+# utils
+thiserror = "2.0"
+itertools = "0.13"
+tinyvec = "1.8"
+enum-map = "2.7"
+
+[workspace.lints.rust]
+nonstandard_style = { level = "warn", priority = -1 }
+unreachable_pub = "warn"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
