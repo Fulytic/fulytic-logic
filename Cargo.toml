@@ -26,6 +26,9 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-inline-default = "0.2"
 
+# async
+crossbeam = "0.8"
+
 # math
 num = "0.4"
 
@@ -34,6 +37,10 @@ thiserror = "2.0"
 itertools = "0.13"
 tinyvec = "1.8"
 enum-map = "2.7"
+local-fmt = { version = "0.1", git = "https://github.com/moriyoshi-kasuga/local-fmt", branch = "main", features = [
+    "macros",
+    "global",
+] }
 
 # macros
 proc-macro2 = "1.0"
