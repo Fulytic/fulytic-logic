@@ -1,16 +1,16 @@
 use crossbeam::atomic::AtomicCell;
-use local_fmt::macros::{def_local_fmt, ConvertStr, EnumIter};
+use local_fmt::macros::{def_local_fmt, UseLocalFmt};
 use std::num::NonZeroUsize;
 
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ConvertStr, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, UseLocalFmt)]
 pub enum Lang {
     EN,
     JA,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ConvertStr, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, UseLocalFmt)]
 pub enum GlobalMessageKey {
     Hello,
 }
@@ -18,6 +18,9 @@ pub enum GlobalMessageKey {
 pub static GLOBAL_LANG: AtomicCell<Lang> = AtomicCell::new(Lang::JA);
 
 def_local_fmt!(
+    visibility = pub,
+    app_file = "core.toml",
+    locales_path = "../locales",
     ident = GLOBAL_MESSAGE,
     lang = Lang,
     key = GlobalMessageKey,
