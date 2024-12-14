@@ -1,5 +1,8 @@
 use crossbeam::atomic::AtomicCell;
 use local_fmt::macros::{def_local_fmt, ConvertStr, EnumIter};
+use std::num::NonZeroUsize;
+
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, ConvertStr, EnumIter)]
 pub enum Lang {
@@ -25,4 +28,22 @@ def_local_fmt!(
 fn test_global_message() {
     // initialize
     let _ = &*GLOBAL_MESSAGE;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GameInfo {
+    pub name: &'static str,
+    pub desc: &'static str,
+    pub min_players: Option<NonZeroUsize>,
+    pub max_players: Option<NonZeroUsize>,
+}
+
+pub trait BaseGameLogic {
+    type GameStartError: std::error::Error;
+
+    fn new() -> Self;
+    fn id(&self) -> Uuid;
+    fn info(&self) -> GameInfo;
+    fn start(&mut self) -> Self::GameStartError;
+    fn close();
 }

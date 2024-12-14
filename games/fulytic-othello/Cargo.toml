@@ -1,12 +1,10 @@
 [package]
-name = "fulytic-macro"
+name = "fulytic-othello"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-proc-macro2.workspace = true
-quote.workspace = true
-syn.workspace = true
+fulytic-core.workspace = true
 
 [lints]
 workspace = true

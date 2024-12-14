@@ -5,13 +5,16 @@ edition = "2021"
 description = "The logic layer of the Fulytic project (game logic, NPC AI, etc.)"
 
 [dependencies]
+fulytic-core.workspace = true
+fulytic-macros.workspace = true
+fulytic-othello.workspace = true
 
 [lib]
 name = "fulytic_logic"
 
 [workspace]
 resolver = "2"
-members = ["fulytic-core", "fulytic-macro"]
+members = ["fulytic-core", "fulytic-macros", "games/fulytic-othello"]
 
 [workspace.package]
 version = "0.1.0"
@@ -19,7 +22,8 @@ edition = "2021"
 
 [workspace.dependencies]
 fulytic-core = { path = "fulytic-core" }
-fulytic-macro = { path = "fulytic-macro" }
+fulytic-macros = { path = "fulytic-macros" }
+fulytic-othello = { path = "games/fulytic-othello" }
 
 # ser/de and that related
 serde = { version = "1.0", features = ["derive"] }
@@ -32,8 +36,12 @@ crossbeam = "0.8"
 # math
 num = "0.4"
 
-# utils
+# error
+anyhow = "1.0"
 thiserror = "2.0"
+
+# utils
+uuid = { version = "1.11", features = ["serde", "v4", "fast-rng"] }
 itertools = "0.13"
 tinyvec = "1.8"
 enum-map = "2.7"
@@ -41,6 +49,7 @@ local-fmt = { version = "0.1", git = "https://github.com/moriyoshi-kasuga/local-
     "macros",
     "global",
 ] }
+strum = { version = "0.26", features = ["derive"] }
 
 # macros
 proc-macro2 = "1.0"
