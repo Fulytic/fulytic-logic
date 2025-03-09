@@ -1,37 +1,29 @@
-use crossbeam::atomic::AtomicCell;
-use local_fmt::macros::{def_local_fmt, UseLocalFmt};
 use std::num::NonZeroUsize;
 
+use enum_table::Enumable;
+use local_fmt::def_local_fmt;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, UseLocalFmt)]
+#[derive(Debug, Clone, Copy, Enumable)]
 pub enum Lang {
     EN,
     JA,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, UseLocalFmt)]
-pub enum GlobalMessageKey {
-    Hello,
-}
+static LANG: std::sync::RwLock<Lang> = std::sync::RwLock::new(Lang::EN);
 
-pub static GLOBAL_LANG: AtomicCell<Lang> = AtomicCell::new(Lang::JA);
+pub struct Messages {
+    pub hello: &'static str,
+}
 
 def_local_fmt!(
-    visibility = pub,
-    app_file = "core.toml",
-    locales_path = "../locales",
-    ident = GLOBAL_MESSAGE,
+    name = MESSAGES,
     lang = Lang,
-    key = GlobalMessageKey,
-    global = || GLOBAL_LANG.load()
+    message = Messages,
+    supplier = || *LANG.read().unwrap(),
+    file_type = "toml",
+    lang_folder = "langs"
 );
-
-#[test]
-fn test_global_message() {
-    // initialize
-    let _ = &*GLOBAL_MESSAGE;
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GameInfo {
