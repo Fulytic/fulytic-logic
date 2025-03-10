@@ -42,7 +42,7 @@ uuid = { version = "1.15", features = ["serde", "v4", "fast-rng"] }
 itertools = "0.14"
 tinyvec = "1.9"
 enum-table = "0.2"
-local-fmt = { version = "0.4", features = ["macros", "macros-toml"] }
+local-fmt = { version = "0.5", features = ["macros", "macros-toml"] }
 
 # macros
 proc-macro2 = "1.0"
