@@ -1,11 +1,11 @@
-use fulytic_core::{GameC2SQueue, GameS2C};
+use fulytic_core::{GameC2SQueue, GameS2C, PlayerLimitError};
 
 use crate::OthelloGame;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum OthelloLoginS2C {
     Success(OthelloGame),
-    PlayerLimitReached,
+    PlayerLimit(PlayerLimitError),
 }
 
 impl GameS2C for OthelloLoginS2C {
@@ -16,7 +16,7 @@ impl GameS2C for OthelloLoginS2C {
             Self::Success(latest_game) => {
                 let _ = std::mem::replace(game, latest_game);
             }
-            Self::PlayerLimitReached => {}
+            Self::PlayerLimit(_) => {}
         }
     }
 }

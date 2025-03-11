@@ -2,12 +2,14 @@
 name = "fulytic-logic"
 version = "0.1.0"
 edition = "2024"
-description = "The logic layer of the Fulytic project (game logic, NPC AI, etc.)"
+description = "The logic layer of the Fulytic project (game logic, Othello, etc.)"
 
 [dependencies]
 fulytic-core.workspace = true
 fulytic-macros.workspace = true
 fulytic-othello.workspace = true
+
+more-convert.workspace = true
 
 [lib]
 name = "fulytic_logic"
@@ -45,6 +47,8 @@ tinyvec = "1.9"
 ambassador = "0.4"
 enum-table = "0.2"
 local-fmt = { version = "0.5", features = ["macros", "macros-toml"] }
+more-convert = { version = "0.9" }
+bytes = "1.10"
 
 # macros
 proc-macro2 = "1.0"
