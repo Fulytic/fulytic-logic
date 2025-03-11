@@ -7,5 +7,7 @@ edition.workspace = true
 enum-table.workspace = true
 local-fmt.workspace = true
 
+ambassador.workspace = true
+thiserror.workspace = true
+serde.workspace = true
 uuid.workspace = true
-anyhow.workspace = true
