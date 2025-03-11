@@ -21,7 +21,7 @@ def_local_fmt!(
     lang_folder = "langs"
 );
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct OthelloGame {
     id: Uuid,
     // 0 is black, 1 is white
@@ -38,7 +38,7 @@ impl BaseGameLogic for OthelloGame {
         fulytic_core::GameInfo {
             name: OTHELLO_MESSAGES.name,
             desc: OTHELLO_MESSAGES.desc,
-            min_players: NonZeroUsize::new(2),
+            min_players: NonZeroUsize::new(1),
             max_players: NonZeroUsize::new(2),
         }
     }
