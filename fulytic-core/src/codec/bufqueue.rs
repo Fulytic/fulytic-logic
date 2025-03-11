@@ -20,7 +20,7 @@ impl<T: Codec> BufQueue<T> {
     }
 
     pub fn push(&mut self, item: T) {
-        match bincode::serde::encode_to_vec(item, bincode::config::standard()) {
+        match item.encode() {
             Ok(encoded) => self.queue.extend_from_slice(&encoded),
             Err(_) => self.missed = true,
         }
