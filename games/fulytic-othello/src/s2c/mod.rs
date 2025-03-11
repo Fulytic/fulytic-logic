@@ -1,4 +1,4 @@
-use fulytic_core::{ambassador_impl_GameS2C, GameS2C, GameC2SQueue};
+use fulytic_core::{ambassador_impl_GameS2C, GameC2SQueue, GameS2C};
 use login::OthelloLoginS2C;
 
 pub mod login;
