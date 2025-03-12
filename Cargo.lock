@@ -39,6 +39,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-trait"
+version = "0.1.87"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d556ec1359574147ec0c4fc5eb525f3f23263a592b1a9c07e0a75b427de55c97"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -156,6 +167,7 @@ name = "fulytic-core"
 version = "0.1.0"
 dependencies = [
  "ambassador",
+ "async-trait",
  "bincode",
  "bytes",
  "enum-table",
@@ -173,6 +185,7 @@ dependencies = [
  "fulytic-macros",
  "fulytic-othello",
  "more-convert",
+ "uuid",
 ]
 
 [[package]]
@@ -189,11 +202,13 @@ name = "fulytic-othello"
 version = "0.1.0"
 dependencies = [
  "ambassador",
+ "async-trait",
  "enum-table",
  "fulytic-core",
  "local-fmt",
  "serde",
  "thiserror",
+ "tokio",
  "uuid",
 ]
 
@@ -205,6 +220,7 @@ dependencies = [
  "fulytic-logic",
  "log",
  "pretty_env_logger",
+ "serde",
  "tokio",
  "uuid",
 ]

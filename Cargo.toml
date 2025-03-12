@@ -10,6 +10,7 @@ fulytic-macros.workspace = true
 fulytic-othello.workspace = true
 
 more-convert.workspace = true
+uuid.workspace = true
 
 [lib]
 name = "fulytic_logic"
@@ -29,6 +30,7 @@ fulytic-othello = { path = "games/fulytic-othello" }
 
 # async and the related
 tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
 
 # ser/de and that related
 serde = { version = "1.0", features = ["derive"] }

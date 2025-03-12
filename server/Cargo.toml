@@ -12,3 +12,4 @@ tokio.workspace = true
 log.workspace = true
 bytes.workspace = true
 uuid.workspace = true
+serde.workspace = true

@@ -1,6 +1,9 @@
 use std::num::NonZeroUsize;
 
-use crate::codec::{Codec, GameC2S, GameS2C};
+use crate::{
+    codec::{Codec, GameC2S, GameS2C},
+    PlayerInfo,
+};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -48,14 +51,22 @@ impl GameInfo {
     }
 }
 
-pub trait BaseGameLogic: Codec {
+#[async_trait::async_trait]
+pub trait BaseGameLogic {
+    type RawGameData: Codec;
+
     type S2C: GameS2C<T = Self>;
     type C2S: GameC2S<T = Self>;
 
     fn info() -> GameInfo;
 
     fn new(id: Uuid) -> Self;
+    async fn data(&self) -> Self::RawGameData;
+    fn new_with_raw_data(id: Uuid, data: Self::RawGameData) -> Self;
+
     fn id(&self) -> Uuid;
 
-    fn forced_termination(&mut self);
+    async fn join(&self, player: &PlayerInfo) -> Result<(), PlayerLimitError>;
+
+    async fn forced_termination(&mut self);
 }

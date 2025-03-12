@@ -13,6 +13,8 @@ ambassador.workspace = true
 thiserror.workspace = true
 serde.workspace = true
 uuid.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
 
 [lints]
 workspace = true

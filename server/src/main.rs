@@ -46,7 +46,7 @@ async fn main() -> tokio::io::Result<()> {
             let mut buf = BytesMut::new();
 
             let read = connection.read_buf(&mut buf).await;
-            match read {
+            let client = match read {
                 Ok(count) => {
                     if count == 0 {
                         log::debug!("reading 0 bytes");
@@ -63,13 +63,23 @@ async fn main() -> tokio::io::Result<()> {
                     log::info!("Player {player:#?} connected");
 
                     let client = client::Client::new(player, connection, address);
-                    let client = Arc::new(client);
                     server.add_client(client.clone()).await;
+                    client
                 }
                 Err(error) => {
                     log::error!("Error while reading incoming packet {}", error);
+                    return;
                 }
             };
+
+            while !client.is_closed() {
+                let open = client.poll_connection().await;
+                if open {
+                    client.process_packets(&server).await;
+                };
+            }
+
+            server.remove_client(client.player_info.id).await;
         });
     }
 }

@@ -1,7 +1,11 @@
-use std::num::NonZeroUsize;
+use std::{
+    num::NonZeroUsize,
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 use fulytic_core::{get_lang, BaseGameLogic, Lang, PlayerInfo};
 use local_fmt::def_local_fmt;
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
 pub mod c2s;
@@ -21,18 +25,28 @@ def_local_fmt!(
     lang_folder = "langs"
 );
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug)]
 pub struct OthelloGame {
     id: Uuid,
     // 0 is black, 1 is white
+    players: RwLock<Vec<PlayerInfo>>,
+    black: AtomicU64,
+    white: AtomicU64,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RawOthelloGameData {
     players: Vec<PlayerInfo>,
     black: u64,
     white: u64,
 }
 
+#[async_trait::async_trait]
 impl BaseGameLogic for OthelloGame {
-    type C2S = c2s::OthelloGameC2S;
+    type RawGameData = RawOthelloGameData;
+
     type S2C = s2c::OthelloGameS2C;
+    type C2S = c2s::OthelloGameC2S;
 
     fn info() -> fulytic_core::GameInfo {
         fulytic_core::GameInfo {
@@ -46,9 +60,26 @@ impl BaseGameLogic for OthelloGame {
     fn new(id: Uuid) -> Self {
         Self {
             id,
-            players: Vec::new(),
-            black: 0x0000000810000000,
-            white: 0x0000001008000000,
+            players: Default::default(),
+            black: AtomicU64::new(0x0000000810000000),
+            white: AtomicU64::new(0x0000001008000000),
+        }
+    }
+
+    async fn data(&self) -> Self::RawGameData {
+        RawOthelloGameData {
+            players: self.players.read().await.clone(),
+            black: self.black.load(Ordering::Relaxed),
+            white: self.white.load(Ordering::Relaxed),
+        }
+    }
+
+    fn new_with_raw_data(id: Uuid, data: Self::RawGameData) -> Self {
+        Self {
+            id,
+            players: RwLock::new(data.players),
+            black: AtomicU64::new(data.black),
+            white: AtomicU64::new(data.white),
         }
     }
 
@@ -56,5 +87,16 @@ impl BaseGameLogic for OthelloGame {
         self.id
     }
 
-    fn forced_termination(&mut self) {}
+    async fn join(&self, player: &PlayerInfo) -> Result<(), fulytic_core::PlayerLimitError> {
+        let len = self.players.read().await.len();
+        match Self::info().check_players(len + 1) {
+            Ok(_) => {
+                self.players.write().await.push(player.clone());
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn forced_termination(&mut self) {}
 }
