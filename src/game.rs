@@ -1,21 +1,35 @@
 use crate::core::BaseGameLogic;
+use fulytic_core::Codec;
 use uuid::Uuid;
 
 #[derive(Debug, more_convert::EnumName)]
+#[enum_name(without_trait)]
 pub enum Game {
     Othello(crate::othello::OthelloGame),
 }
 
+macro_rules! forwarding {
+    ($var: expr, $game: pat => $action: expr) => {
+        match $var {
+            Game::Othello($game) => $action,
+        }
+    };
+}
+
 impl Game {
     pub fn id(&self) -> Uuid {
-        match self {
-            Self::Othello(game) => game.id(),
-        }
+        forwarding!(self, game => game.id())
+    }
+
+    pub async fn join(&self, player: crate::core::PlayerInfo) -> Result<(), fulytic_core::PlayerLimitError> {
+        forwarding!(self, game => game.join(player).await)
+    }
+
+    pub async fn raw_data(&self) -> Option<Vec<u8>> {
+        forwarding!(self, game => game.raw_data().await.encode()).ok()
     }
 
     pub async fn forced_termination(&mut self) {
-        match self {
-            Self::Othello(game) => game.forced_termination().await,
-        }
+        forwarding!(self, game => game.forced_termination().await)
     }
 }

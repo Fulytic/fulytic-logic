@@ -3,9 +3,9 @@ use uuid::Uuid;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct GameJoinC2S {
-    player: PlayerInfo,
-    game_uuid: Uuid,
-    game_name: String,
+    pub player: PlayerInfo,
+    pub game_uuid: Uuid,
+    pub game_name: String,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

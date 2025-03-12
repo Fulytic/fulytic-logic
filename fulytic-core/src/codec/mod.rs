@@ -1,3 +1,4 @@
+use bufqueue::TypedBufQueue;
 use serde::Serialize;
 
 use crate::BaseGameLogic;
@@ -29,8 +30,8 @@ pub trait GameError: std::error::Error + Codec {}
 
 impl<T> GameError for T where T: std::error::Error + Codec {}
 
-pub type GameC2SQueue<T> = BufQueue<<T as BaseGameLogic>::C2S>;
-pub type GameS2CQueue<T> = BufQueue<<T as BaseGameLogic>::S2C>;
+pub type GameC2SQueue<T> = TypedBufQueue<<T as BaseGameLogic>::C2S>;
+pub type GameS2CQueue<T> = TypedBufQueue<<T as BaseGameLogic>::S2C>;
 
 #[ambassador::delegatable_trait]
 pub trait GameC2S: Codec {

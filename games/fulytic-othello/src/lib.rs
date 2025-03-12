@@ -66,7 +66,7 @@ impl BaseGameLogic for OthelloGame {
         }
     }
 
-    async fn data(&self) -> Self::RawGameData {
+    async fn raw_data(&self) -> Self::RawGameData {
         RawOthelloGameData {
             players: self.players.read().await.clone(),
             black: self.black.load(Ordering::Relaxed),
@@ -87,7 +87,7 @@ impl BaseGameLogic for OthelloGame {
         self.id
     }
 
-    async fn join(&self, player: &PlayerInfo) -> Result<(), fulytic_core::PlayerLimitError> {
+    async fn join(&self, player: PlayerInfo) -> Result<(), fulytic_core::PlayerLimitError> {
         let len = self.players.read().await.len();
         match Self::info().check_players(len + 1) {
             Ok(_) => {

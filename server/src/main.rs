@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use bytes::BytesMut;
 use fulytic_logic::core::{Codec, PlayerInfo};
 use tokio::io::AsyncReadExt;
@@ -73,9 +71,9 @@ async fn main() -> tokio::io::Result<()> {
             };
 
             while !client.is_closed() {
-                let open = client.poll_connection().await;
+                let open = client.poll_connection(&server).await;
                 if open {
-                    client.process_packets(&server).await;
+                    // client.process_packets(&server).await;
                 };
             }
 

@@ -62,12 +62,12 @@ pub trait BaseGameLogic {
     fn info() -> GameInfo;
 
     fn new(id: Uuid) -> Self;
-    async fn data(&self) -> Self::RawGameData;
+    async fn raw_data(&self) -> Self::RawGameData;
     fn new_with_raw_data(id: Uuid, data: Self::RawGameData) -> Self;
 
     fn id(&self) -> Uuid;
 
-    async fn join(&self, player: &PlayerInfo) -> Result<(), PlayerLimitError>;
+    async fn join(&self, player: PlayerInfo) -> Result<(), PlayerLimitError>;
 
     async fn forced_termination(&self);
 
