@@ -13,3 +13,4 @@ log.workspace = true
 bytes.workspace = true
 uuid.workspace = true
 serde.workspace = true
+bincode.workspace = true

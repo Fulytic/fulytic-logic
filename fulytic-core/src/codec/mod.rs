@@ -35,11 +35,11 @@ pub type GameS2CQueue<T> = BufQueue<<T as BaseGameLogic>::S2C>;
 #[ambassador::delegatable_trait]
 pub trait GameC2S: Codec {
     type T: BaseGameLogic;
-    fn apply_server(self, game: &mut Self::T, queue: &mut GameS2CQueue<Self::T>);
+    fn apply_server(self, game: &Self::T, queue: &mut GameS2CQueue<Self::T>);
 }
 
 #[ambassador::delegatable_trait]
 pub trait GameS2C: Codec {
     type T: BaseGameLogic;
-    fn apply_client(self, game: &mut Self::T, queue: &mut GameC2SQueue<Self::T>);
+    fn apply_client(self, game: &Self::T, queue: &mut GameC2SQueue<Self::T>);
 }

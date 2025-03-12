@@ -11,5 +11,5 @@ pub struct OthelloSelectCharC2S {
 impl GameC2S for OthelloSelectCharC2S {
     type T = OthelloGame;
 
-    fn apply_server(self, game: &mut Self::T, queue: &mut GameS2CQueue<Self::T>) {}
+    fn apply_server(self, game: &Self::T, queue: &mut GameS2CQueue<Self::T>) {}
 }

@@ -4,6 +4,7 @@ use crate::{
     codec::{Codec, GameC2S, GameS2C},
     PlayerInfo,
 };
+use bytes::{Buf, BytesMut};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -68,5 +69,35 @@ pub trait BaseGameLogic {
 
     async fn join(&self, player: &PlayerInfo) -> Result<(), PlayerLimitError>;
 
-    async fn forced_termination(&mut self);
+    async fn forced_termination(&self);
+
+    fn decode_c2s_packet(
+        packet: &mut BytesMut,
+    ) -> Result<Option<Self::C2S>, bincode::error::DecodeError> {
+        match Self::C2S::decode(packet) {
+            Ok((c2s, len)) => {
+                packet.advance(len);
+                Ok(Some(c2s))
+            }
+            Err(err) => match err {
+                bincode::error::DecodeError::UnexpectedEnd { .. } => Ok(None),
+                err => Err(err),
+            },
+        }
+    }
+
+    fn decode_s2c_packet(
+        packet: &mut BytesMut,
+    ) -> Result<Option<Self::S2C>, bincode::error::DecodeError> {
+        match Self::S2C::decode(packet) {
+            Ok((s2c, len)) => {
+                packet.advance(len);
+                Ok(Some(s2c))
+            }
+            Err(err) => match err {
+                bincode::error::DecodeError::UnexpectedEnd { .. } => Ok(None),
+                err => Err(err),
+            },
+        }
+    }
 }

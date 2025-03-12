@@ -4,3 +4,6 @@ pub use fulytic_othello as othello;
 
 pub mod game;
 pub use game::*;
+
+pub mod client;
+pub use client::*;

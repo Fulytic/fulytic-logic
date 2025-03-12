@@ -98,5 +98,5 @@ impl BaseGameLogic for OthelloGame {
         }
     }
 
-    async fn forced_termination(&mut self) {}
+    async fn forced_termination(&self) {}
 }

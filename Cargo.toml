@@ -11,6 +11,8 @@ fulytic-othello.workspace = true
 
 more-convert.workspace = true
 uuid.workspace = true
+serde.workspace = true
+serde_bytes.workspace = true
 
 [lib]
 name = "fulytic_logic"
@@ -34,6 +36,7 @@ async-trait = "0.1"
 
 # ser/de and that related
 serde = { version = "1.0", features = ["derive"] }
+serde_bytes = "0.11"
 serde_json = "1.0"
 serde-inline-default = "0.2"
 bincode = { version = "2.0", features = ["serde"] }

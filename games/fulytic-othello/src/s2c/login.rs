@@ -11,7 +11,7 @@ pub enum OthelloSelectCharS2C {
 impl GameS2C for OthelloSelectCharS2C {
     type T = OthelloGame;
 
-    fn apply_client(self, game: &mut Self::T, _: &mut GameC2SQueue<Self::T>) {
+    fn apply_client(self, game: &Self::T, _: &mut GameC2SQueue<Self::T>) {
         match self {
             Self::Success(selected_char) => {}
             Self::Fail => {}
