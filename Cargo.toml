@@ -24,7 +24,7 @@ name = "fulytic_logic"
 
 [workspace]
 resolver = "2"
-members = ["fulytic-core", "fulytic-macros", "games/fulytic-othello", "server"]
+members = [ "client","fulytic-core", "fulytic-macros", "games/fulytic-othello", "server"]
 
 [workspace.package]
 version = "0.1.0"
@@ -81,3 +81,7 @@ expect_used = "deny"
 panic = "deny"
 print_stdout = "deny"
 print_stderr = "deny"
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1

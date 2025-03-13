@@ -1,0 +1,20 @@
+[package]
+name = "client"
+version.workspace = true
+# https://bevyengine.org/learn/quick-start/getting-started/setup/#add-bevy-as-a-dependency
+edition = "2021"
+
+[dependencies]
+bevy = "0.15"
+log = { workspace = true, features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
+pretty_env_logger = "0.5"
+tokio.workspace = true
+bytes.workspace = true
+uuid.workspace = true
+serde.workspace = true
+
+[lints]
+workspace = true
