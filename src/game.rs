@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::core::{BaseGameLogic, PlayerInfo, bufqueue::BufQueue};
 use bytes::BytesMut;
-use fulytic_core::Codec;
+use fulytic_core::{Codec, GameJoinS2C};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
@@ -25,7 +25,7 @@ impl Game {
         forwarding!(self, game => game.id())
     }
 
-    pub async fn join(&self, player: PlayerInfo) -> Result<(), fulytic_core::PlayerLimitError> {
+    pub async fn join(&self, player: PlayerInfo) -> Result<(), GameJoinS2C> {
         forwarding!(self, game => game.join(player).await)
     }
 

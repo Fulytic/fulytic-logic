@@ -1,6 +1,9 @@
 pub mod message;
 pub use message::*;
 
+pub mod join;
+pub use join::*;
+
 pub mod codec;
 pub use codec::*;
 

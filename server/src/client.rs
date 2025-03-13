@@ -7,8 +7,8 @@ use std::{
 };
 
 use fulytic_logic::{
-    core::{BufQueue, PlayerInfo},
-    Game, GameJoinC2S,
+    core::{BufQueue, GameJoinC2S, PlayerInfo},
+    Game,
 };
 use tokio::{
     io::AsyncReadExt,

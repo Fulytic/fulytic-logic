@@ -1,6 +1,9 @@
 use std::{collections::HashMap, sync::Arc};
 
-use fulytic_logic::{Game, GameJoinC2S, GameJoinS2C};
+use fulytic_logic::{
+    core::{GameJoinC2S, GameJoinS2C},
+    Game,
+};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
@@ -36,7 +39,7 @@ impl Server {
 
     pub async fn join_game(&self, packet: GameJoinC2S) -> GameJoinS2C {
         let Some(game) = self.games.read().await.get(&packet.game_uuid).cloned() else {
-            return GameJoinS2C::MissingId;
+            return GameJoinS2C::MissingGameId;
         };
         {
             let map = self.clients.read().await;
@@ -46,7 +49,7 @@ impl Server {
             client.change_stat(ClientStat::Playing(game.clone())).await;
         }
         if let Err(err) = game.join(packet.player).await {
-            return GameJoinS2C::LimitError(err);
+            return err;
         };
         let Some(raw_data) = game.raw_data().await else {
             return GameJoinS2C::ServerError;

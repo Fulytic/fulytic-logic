@@ -3,7 +3,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
-use fulytic_core::{get_lang, BaseGameLogic, Lang, PlayerInfo};
+use fulytic_core::{get_lang, BaseGameLogic, GameJoinS2C, Lang, PlayerInfo};
 use local_fmt::def_local_fmt;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -87,14 +87,13 @@ impl BaseGameLogic for OthelloGame {
         self.id
     }
 
-    async fn join(&self, player: PlayerInfo) -> Result<(), fulytic_core::PlayerLimitError> {
+    async fn join(&self, player: PlayerInfo) -> Result<(), GameJoinS2C> {
         let len = self.players.read().await.len();
-        match Self::info().check_players(len + 1) {
-            Ok(_) => {
-                self.players.write().await.push(player.clone());
-                Ok(())
-            }
-            Err(e) => Err(e),
+        if Self::info().is_ok_max_players(len + 1) {
+            self.players.write().await.push(player.clone());
+            Ok(())
+        } else {
+            return Err(GameJoinS2C::AlreadyMaxPlayers);
         }
     }
 

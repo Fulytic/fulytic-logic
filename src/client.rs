@@ -1,23 +1,3 @@
-use fulytic_core::{PlayerInfo, PlayerLimitError};
-use uuid::Uuid;
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct GameJoinC2S {
-    pub player: PlayerInfo,
-    pub game_uuid: Uuid,
-    pub game_name: String,
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum GameJoinS2C {
-    RawGameData(#[serde(with = "serde_bytes")] Vec<u8>),
-    MissingId,
-    MissingPlayerInfo,
-    AlreadyStarted,
-    LimitError(PlayerLimitError),
-    ServerError,
-}
-
 #[cfg(test)]
 mod tests {
     use tokio::{
@@ -25,9 +5,8 @@ mod tests {
         net::TcpStream,
     };
 
-    use fulytic_core::Codec;
-
-    use super::*;
+    use fulytic_core::{Codec, GameJoinC2S, GameJoinS2C, PlayerInfo};
+    use uuid::Uuid;
 
     #[tokio::test]
     async fn hey() {
