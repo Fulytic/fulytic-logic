@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use fulytic_core::{GameC2S, GameS2CQueue, PlayerInfo};
 
 use crate::OthelloGame;
@@ -11,5 +13,8 @@ pub struct OthelloSelectCharC2S {
 impl GameC2S for OthelloSelectCharC2S {
     type T = OthelloGame;
 
-    fn apply_server(self, game: &Self::T, queue: &mut GameS2CQueue<Self::T>) {}
+    async fn apply_server(self, game: Arc<Self::T>, queue: GameS2CQueue<Self::T>) {
+        let _ = game;
+        let _ = queue;
+    }
 }

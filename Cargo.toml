@@ -13,6 +13,11 @@ more-convert.workspace = true
 uuid.workspace = true
 serde.workspace = true
 serde_bytes.workspace = true
+bytes.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true
 
 [lib]
 name = "fulytic_logic"

@@ -15,24 +15,17 @@ impl Default for BaseBufQueue {
     }
 }
 
-impl Deref for BaseBufQueue {
-    type Target = BytesMut;
-
-    fn deref(&self) -> &Self::Target {
-        &self.queue
-    }
-}
-
-impl DerefMut for BaseBufQueue {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.queue
-    }
-}
-
 impl BaseBufQueue {
     pub fn new() -> Self {
         Self {
             queue: BytesMut::new(),
+            missed: false,
+        }
+    }
+
+    pub fn with(buf: BytesMut) -> Self {
+        Self {
+            queue: buf,
             missed: false,
         }
     }
@@ -73,32 +66,53 @@ impl BaseBufQueue {
         self.missed
     }
 
-    pub fn split(&mut self) -> Option<BytesMut> {
-        if self.missed {
-            self.missed = false;
-            Some(self.queue.split())
-        } else {
-            None
-        }
+    pub fn split(&mut self) -> BytesMut {
+        self.queue.split()
+    }
+
+    pub fn reserve(&mut self, additional: usize) {
+        self.queue.reserve(additional);
+    }
+
+    pub fn as_buf_queue(&self) -> &BufQueue {
+        unsafe { &*(self as *const BaseBufQueue as *const BufQueue) }
+    }
+
+    pub fn as_mut_buf_queue(&mut self) -> &mut BufQueue {
+        unsafe { &mut *(self as *mut BaseBufQueue as *mut BufQueue) }
+    }
+
+    pub fn as_typed_buf_queue<T: Codec>(&self) -> &TypedBufQueue<T> {
+        unsafe { &*(self as *const BaseBufQueue as *const TypedBufQueue<T>) }
+    }
+
+    pub fn as_mut_typed_buf_queue<T: Codec>(&mut self) -> &mut TypedBufQueue<T> {
+        unsafe { &mut *(self as *mut BaseBufQueue as *mut TypedBufQueue<T>) }
     }
 }
 
 #[derive(Default)]
+#[repr(transparent)]
 pub struct BufQueue {
     queue: BaseBufQueue,
 }
 
 impl BufQueue {
+    pub fn with(buf: BytesMut) -> Self {
+        Self {
+            queue: BaseBufQueue::with(buf),
+        }
+    }
+
     pub fn encode<T: Codec>(&mut self, item: T) {
-        let result = item.encode();
-        match result {
-            Ok(value) => {
+        if self.is_missed() {
+            return;
+        }
+        match item.encode() {
+            Some(value) => {
                 self.extend_from_slice(&value);
             }
-            Err(err) => {
-                if let bincode::error::EncodeError::UnexpectedEnd = err {
-                    log::error!("Unexpected end while encoding on BufQueue");
-                }
+            None => {
                 self.missed();
             }
         }
@@ -106,19 +120,19 @@ impl BufQueue {
 
     // when returns error with true, close connection
     pub fn decode<T: Codec>(&mut self) -> Result<T, bool> {
-        let result = T::decode(self.as_ref());
-        match result {
+        if self.is_missed() {
+            return Err(true);
+        }
+        match T::decode(self.as_slice()) {
             Ok((item, cnt)) => {
                 self.advance(cnt);
                 Ok(item)
             }
-            Err(err) => {
-                if let bincode::error::DecodeError::UnexpectedEnd { .. } = err {
-                    Err(false)
-                } else {
+            Err(is_missed) => {
+                if is_missed {
                     self.missed();
-                    Err(true)
                 }
+                Err(is_missed)
             }
         }
     }
@@ -139,12 +153,20 @@ impl DerefMut for BufQueue {
 }
 
 #[derive(Default)]
+#[repr(transparent)]
 pub struct TypedBufQueue<T: Codec> {
     queue: BufQueue,
     _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Codec> TypedBufQueue<T> {
+    pub fn with(buf: BytesMut) -> Self {
+        Self {
+            queue: BufQueue::with(buf),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
     pub fn encode(&mut self, item: T) {
         self.queue.encode(item);
     }

@@ -8,7 +8,7 @@ use crate::client::{Client, ClientStat};
 
 pub struct Server {
     clients: Arc<RwLock<HashMap<Uuid, Arc<Client>>>>,
-    games: Arc<RwLock<HashMap<Uuid, Arc<Game>>>>,
+    games: Arc<RwLock<HashMap<Uuid, Game>>>,
 }
 
 impl Server {
@@ -31,18 +31,26 @@ impl Server {
     }
 
     pub async fn new_game(&self, game: Game) {
-        self.games.write().await.insert(game.id(), Arc::new(game));
+        self.games.write().await.insert(game.id(), game);
     }
 
-    pub async fn join_game(&self, packet: GameJoinC2S) -> Option<(Arc<Game>, GameJoinS2C)> {
-        let game = self.games.read().await.get(&packet.game_uuid)?.clone();
+    pub async fn join_game(&self, packet: GameJoinC2S) -> GameJoinS2C {
+        let Some(game) = self.games.read().await.get(&packet.game_uuid).cloned() else {
+            return GameJoinS2C::MissingId;
+        };
         {
             let map = self.clients.read().await;
-            let client = map.get(&packet.player.id)?;
+            let Some(client) = map.get(&packet.player.id) else {
+                return GameJoinS2C::MissingPlayerInfo;
+            };
             client.change_stat(ClientStat::Playing(game.clone())).await;
         }
-        game.join(packet.player).await.ok()?;
-        let raw_data = game.raw_data().await?;
-        Some((game, GameJoinS2C::RawGameData(raw_data)))
+        if let Err(err) = game.join(packet.player).await {
+            return GameJoinS2C::LimitError(err);
+        };
+        let Some(raw_data) = game.raw_data().await else {
+            return GameJoinS2C::ServerError;
+        };
+        GameJoinS2C::RawGameData(raw_data)
     }
 }

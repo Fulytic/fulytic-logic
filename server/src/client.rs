@@ -6,13 +6,13 @@ use std::{
     },
 };
 
-use bytes::{Buf, BytesMut};
 use fulytic_logic::{
-    core::{BufQueue, Codec, PlayerInfo},
+    core::{BufQueue, PlayerInfo},
     Game, GameJoinC2S,
 };
 use tokio::{
     io::AsyncReadExt,
+    net::tcp::OwnedReadHalf,
     sync::{Mutex, RwLock},
 };
 
@@ -21,37 +21,33 @@ use crate::server::Server;
 #[derive(Debug, Clone)]
 pub enum ClientStat {
     Waiting,
-    Playing(Arc<Game>),
+    Playing(Game),
 }
 
 pub struct Client {
-    pub player_info: PlayerInfo,
-    connection_reader: Arc<Mutex<tokio::net::tcp::OwnedReadHalf>>,
-    connection_writer: Arc<Mutex<tokio::net::tcp::OwnedWriteHalf>>,
+    pub player_info: Arc<PlayerInfo>,
     pub address: SocketAddr,
     stat: RwLock<ClientStat>,
     closed: AtomicBool,
-    s2c: Arc<Mutex<BufQueue>>,
+    pub s2c: Arc<Mutex<BufQueue>>,
+    s2c_sender: tokio::sync::mpsc::Sender<()>,
     c2s: Arc<Mutex<BufQueue>>,
 }
 
 impl Client {
     // TODO: generate uuid on server, and response to client
     pub fn new(
+        s2c_sender: tokio::sync::mpsc::Sender<()>,
         player_info: PlayerInfo,
-        connection: tokio::net::TcpStream,
         address: SocketAddr,
     ) -> Arc<Self> {
-        let (connection_reader, connection_writer) = connection.into_split();
-
         Arc::new(Self {
-            player_info,
-            connection_reader: Arc::new(Mutex::new(connection_reader)),
-            connection_writer: Arc::new(Mutex::new(connection_writer)),
+            player_info: Arc::new(player_info),
             address,
             stat: RwLock::new(ClientStat::Waiting),
             closed: AtomicBool::new(false),
             s2c: Default::default(),
+            s2c_sender,
             c2s: Default::default(),
         })
     }
@@ -68,52 +64,63 @@ impl Client {
         *self.stat.write().await = stat;
     }
 
-    pub async fn poll_connection(&self, server: &Server) -> bool {
+    pub async fn poll_connection(
+        &self,
+        server: &Server,
+        connection_reader: Arc<Mutex<OwnedReadHalf>>,
+    ) {
         loop {
             if self.is_closed() {
-                return false;
+                return;
             }
             let mut c2s = self.c2s.lock().await;
-
-            match self.stat.read().await.clone() {
-                ClientStat::Waiting => match c2s.decode::<GameJoinC2S>() {
-                    Ok(packet) => {
-                        if packet.player != self.player_info {
-                            self.close();
-                            return false;
-                        }
-                        let game = server.join_game(packet).await;
-                        let Some((game, packet)) = game else {
-                            self.close();
-                            return false;
-                        };
-                        self.change_stat(ClientStat::Playing(game)).await;
-                        self.s2c.lock().await.encode(packet);
-                    }
-                    Err(true) => {
-                        self.close();
-                        return false;
-                    }
-                    Err(false) => {}
-                },
-                ClientStat::Playing(game) => {}
+            if c2s.is_missed() {
+                self.close();
+                return;
             }
 
-            match self
-                .connection_reader
-                .lock()
-                .await
-                .read_buf(c2s.mut_buf())
-                .await
-            {
+            if !c2s.is_empty() {
+                match self.stat.read().await.clone() {
+                    ClientStat::Waiting => match c2s.decode::<GameJoinC2S>() {
+                        Ok(packet) => {
+                            if packet.player != *self.player_info {
+                                self.close();
+                                return;
+                            }
+                            log::info!("joining game {:#?}", packet);
+                            let s2c_packet = server.join_game(packet).await;
+                            log::info!("joined game s2c packet: {:#?}", s2c_packet);
+                            self.s2c.lock().await.encode(s2c_packet);
+                            let _ = self.s2c_sender.send(()).await;
+                        }
+                        Err(true) => {
+                            self.close();
+                            return;
+                        }
+                        Err(false) => {}
+                    },
+                    ClientStat::Playing(game) => {
+                        game.decode_c2s_packet(
+                            c2s.split(),
+                            self.s2c_sender.clone(),
+                            self.player_info.clone(),
+                            self.s2c.clone(),
+                        );
+                    }
+                }
+            }
+
+            c2s.reserve(1024);
+
+            match connection_reader.lock().await.read_buf(c2s.mut_buf()).await {
                 Ok(0) => {
                     self.close();
-                    return false;
+                    return;
                 }
                 Ok(_) => {}
                 Err(_) => {
                     self.close();
-                    return false;
+                    return;
                 }
             }
         }

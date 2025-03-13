@@ -175,6 +175,7 @@ dependencies = [
  "log",
  "serde",
  "thiserror",
+ "tokio",
  "uuid",
 ]
 
@@ -182,12 +183,14 @@ dependencies = [
 name = "fulytic-logic"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "fulytic-core",
  "fulytic-macros",
  "fulytic-othello",
  "more-convert",
  "serde",
  "serde_bytes",
+ "tokio",
  "uuid",
 ]
 

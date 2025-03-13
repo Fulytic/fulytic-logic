@@ -1,11 +1,12 @@
-use std::num::NonZeroUsize;
+use std::{num::NonZeroUsize, sync::Arc};
 
 use crate::{
     codec::{Codec, GameC2S, GameS2C},
-    PlayerInfo,
+    BufQueue, GameS2CQueue, PlayerInfo,
 };
-use bytes::{Buf, BytesMut};
+use bytes::BytesMut;
 use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -53,7 +54,7 @@ impl GameInfo {
 }
 
 #[async_trait::async_trait]
-pub trait BaseGameLogic {
+pub trait BaseGameLogic: Sized + Send + Sync + 'static {
     type RawGameData: Codec;
 
     type S2C: GameS2C<T = Self>;
@@ -72,32 +73,19 @@ pub trait BaseGameLogic {
     async fn forced_termination(&self);
 
     fn decode_c2s_packet(
-        packet: &mut BytesMut,
-    ) -> Result<Option<Self::C2S>, bincode::error::DecodeError> {
-        match Self::C2S::decode(packet) {
-            Ok((c2s, len)) => {
-                packet.advance(len);
-                Ok(Some(c2s))
+        self: Arc<Self>,
+        packet: BytesMut,
+        sernder: tokio::sync::mpsc::Sender<()>,
+        player: Arc<PlayerInfo>,
+        bufqueue: Arc<Mutex<BufQueue>>,
+    ) -> bool {
+        match Self::C2S::decode(&packet) {
+            Ok((ok, _)) => {
+                let bufqueue = GameS2CQueue::<Self>::new(sernder, player, bufqueue);
+                tokio::spawn(Self::C2S::apply_server(ok, self, bufqueue));
+                true
             }
-            Err(err) => match err {
-                bincode::error::DecodeError::UnexpectedEnd { .. } => Ok(None),
-                err => Err(err),
-            },
-        }
-    }
-
-    fn decode_s2c_packet(
-        packet: &mut BytesMut,
-    ) -> Result<Option<Self::S2C>, bincode::error::DecodeError> {
-        match Self::S2C::decode(packet) {
-            Ok((s2c, len)) => {
-                packet.advance(len);
-                Ok(Some(s2c))
-            }
-            Err(err) => match err {
-                bincode::error::DecodeError::UnexpectedEnd { .. } => Ok(None),
-                err => Err(err),
-            },
+            Err(_) => false,
         }
     }
 }
