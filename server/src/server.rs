@@ -2,12 +2,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use fulytic_logic::{
     core::{GameJoinC2S, GameJoinS2C},
-    Game,
+    ClientStat, Game, GameCreateC2S, GameCreateS2C,
 };
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::client::{Client, ClientStat};
+use crate::client::Client;
 
 pub struct Server {
     clients: Arc<RwLock<HashMap<Uuid, Arc<Client>>>>,
@@ -35,6 +35,17 @@ impl Server {
 
     pub async fn new_game(&self, game: Game) {
         self.games.write().await.insert(game.id(), game);
+    }
+
+    pub async fn create_game(&self, packet: GameCreateC2S) -> GameCreateS2C {
+        let game = Game::new(&packet.game_name, Uuid::new_v4());
+        if let Some(game) = game {
+            let id = game.id();
+            self.new_game(game).await;
+            GameCreateS2C::GameCreated(id)
+        } else {
+            GameCreateS2C::InvalidGameName
+        }
     }
 
     pub async fn join_game(&self, packet: GameJoinC2S) -> GameJoinS2C {

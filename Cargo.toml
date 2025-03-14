@@ -16,6 +16,12 @@ serde_bytes.workspace = true
 bytes.workspace = true
 tokio.workspace = true
 
+bevy = { workspace = true, optional = true }
+
+[features]
+default = []
+bevy = ["dep:bevy"]
+
 [lints]
 workspace = true
 
@@ -24,7 +30,13 @@ name = "fulytic_logic"
 
 [workspace]
 resolver = "2"
-members = [ "client","fulytic-core", "fulytic-macros", "games/fulytic-othello", "server"]
+members = [
+    "client",
+    "fulytic-core",
+    "fulytic-macros",
+    "games/fulytic-othello",
+    "server",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -34,6 +46,9 @@ edition = "2021"
 fulytic-core = { path = "fulytic-core" }
 fulytic-macros = { path = "fulytic-macros" }
 fulytic-othello = { path = "games/fulytic-othello" }
+
+# game
+bevy = "0.15"
 
 # async and the related
 tokio = { version = "1.0", features = ["full"] }

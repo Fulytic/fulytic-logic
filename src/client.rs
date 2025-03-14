@@ -1,3 +1,11 @@
+use crate::Game;
+
+#[derive(Debug, Clone)]
+pub enum ClientStat {
+    Waiting,
+    Playing(Game),
+}
+
 #[cfg(test)]
 mod tests {
     use tokio::{

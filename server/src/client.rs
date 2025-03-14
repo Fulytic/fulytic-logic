@@ -8,7 +8,7 @@ use std::{
 
 use fulytic_logic::{
     core::{BufQueue, GameJoinC2S, PlayerInfo},
-    Game,
+    ClientStat,
 };
 use tokio::{
     io::AsyncReadExt,
@@ -17,12 +17,6 @@ use tokio::{
 };
 
 use crate::server::Server;
-
-#[derive(Debug, Clone)]
-pub enum ClientStat {
-    Waiting,
-    Playing(Game),
-}
 
 pub struct Client {
     pub player_info: Arc<PlayerInfo>,

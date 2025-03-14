@@ -6,6 +6,7 @@ use fulytic_core::{Codec, GameJoinS2C};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
+#[cfg_attr(feature = "bevy", derive(bevy::prelude::Component))]
 #[derive(Debug, Clone, more_convert::EnumName)]
 #[enum_name(without_trait)]
 pub enum Game {
@@ -21,6 +22,15 @@ macro_rules! forwarding {
 }
 
 impl Game {
+    pub fn new(name: &str, id: Uuid) -> Option<Self> {
+        let game = match name {
+            "othello" => Game::Othello(Arc::new(crate::othello::OthelloGame::new(id))),
+            _ => return None,
+        };
+
+        Some(game)
+    }
+
     pub fn id(&self) -> Uuid {
         forwarding!(self, game => game.id())
     }

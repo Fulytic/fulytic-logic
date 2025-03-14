@@ -1525,6 +1525,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bytes",
+ "fulytic-logic",
  "log",
  "pretty_env_logger",
  "serde",
@@ -2152,6 +2153,7 @@ dependencies = [
 name = "fulytic-logic"
 version = "0.1.0"
 dependencies = [
+ "bevy",
  "bytes",
  "fulytic-core",
  "fulytic-macros",
