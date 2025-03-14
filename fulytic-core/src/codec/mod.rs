@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use bufqueue::TypedBufQueue;
 use serde::Serialize;
 use tokio::sync::Mutex;
 
@@ -67,35 +66,8 @@ pub trait GameError: std::error::Error + Codec {}
 
 impl<T> GameError for T where T: std::error::Error + Codec {}
 
-pub struct PlayerBuf<T: Codec> {
-    pub info: Arc<PlayerInfo>,
-    sender: tokio::sync::mpsc::Sender<()>,
-    queue: Arc<Mutex<TypedBufQueue<T>>>,
-}
-
-impl<T: Codec> PlayerBuf<T> {
-    pub fn new(
-        sender: tokio::sync::mpsc::Sender<()>,
-        info: Arc<PlayerInfo>,
-        bufqueue: Arc<Mutex<BufQueue>>,
-    ) -> Self {
-        Self {
-            sender,
-            info,
-            queue: unsafe {
-                std::mem::transmute::<Arc<Mutex<BufQueue>>, Arc<Mutex<TypedBufQueue<T>>>>(bufqueue)
-            },
-        }
-    }
-
-    pub async fn encode(&self, item: T) {
-        self.queue.lock().await.encode(item);
-        let _ = self.sender.send(()).await;
-    }
-}
-
-pub type GameC2SQueue<T> = PlayerBuf<<T as BaseGameLogic>::C2S>;
-pub type GameS2CQueue<T> = PlayerBuf<<T as BaseGameLogic>::S2C>;
+pub type GameC2SQueue<T> = TypedPlayerBuf<<T as BaseGameLogic>::C2S>;
+pub type GameS2CQueue<T> = TypedPlayerBuf<<T as BaseGameLogic>::S2C>;
 
 #[ambassador::delegatable_trait]
 pub trait GameC2S: Codec {
@@ -112,4 +84,62 @@ pub trait GameC2S: Codec {
 pub trait GameS2C: Codec {
     type T: BaseGameLogic;
     async fn apply_client(self, game: &Self::T, queue: &mut GameC2SQueue<Self::T>);
+}
+
+pub struct PlayerBuf {
+    pub info: Arc<PlayerInfo>,
+    sender: tokio::sync::mpsc::Sender<()>,
+    queue: Arc<Mutex<BufQueue>>,
+}
+
+impl PlayerBuf {
+    pub fn new(
+        sender: tokio::sync::mpsc::Sender<()>,
+        info: Arc<PlayerInfo>,
+        queue: Arc<Mutex<BufQueue>>,
+    ) -> Self {
+        Self {
+            sender,
+            info,
+            queue,
+        }
+    }
+
+    pub async fn encode<T: Codec>(&self, item: T) {
+        self.queue.lock().await.encode(item);
+        let _ = self.sender.send(()).await;
+    }
+
+    pub fn into_typed<T: Codec>(self) -> TypedPlayerBuf<T> {
+        unsafe { std::mem::transmute(self) }
+    }
+}
+
+#[repr(transparent)]
+pub struct TypedPlayerBuf<T: Codec> {
+    buf: PlayerBuf,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: Codec> TypedPlayerBuf<T> {
+    pub fn new(
+        sender: tokio::sync::mpsc::Sender<()>,
+        info: Arc<PlayerInfo>,
+        queue: Arc<Mutex<BufQueue>>,
+    ) -> Self {
+        Self {
+            buf: PlayerBuf::new(sender, info, queue),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    pub async fn encode(&self, item: T) {
+        self.buf.encode(item).await;
+    }
+
+    /// # Safety
+    /// This function is unsafe because it does not check the type of the item.
+    pub async unsafe fn unchecked_encode<L: Codec>(&self, item: L) {
+        self.buf.encode(item).await;
+    }
 }

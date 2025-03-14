@@ -7,7 +7,7 @@ use std::{
 };
 
 use fulytic_logic::{
-    core::{BufQueue, GameJoinC2S, PlayerInfo},
+    core::{BufQueue, GameJoinC2S, PlayerBuf, PlayerInfo},
     ClientStat,
 };
 use tokio::{
@@ -58,6 +58,14 @@ impl Client {
         *self.stat.write().await = stat;
     }
 
+    pub fn create_buf(&self) -> PlayerBuf {
+        PlayerBuf::new(
+            self.s2c_sender.clone(),
+            self.player_info.clone(),
+            self.s2c.clone(),
+        )
+    }
+
     pub async fn poll_connection(
         &self,
         server: &Server,
@@ -94,12 +102,7 @@ impl Client {
                         Err(false) => {}
                     },
                     ClientStat::Playing(game) => {
-                        game.decode_c2s_packet(
-                            c2s.split(),
-                            self.s2c_sender.clone(),
-                            self.player_info.clone(),
-                            self.s2c.clone(),
-                        );
+                        game.decode_c2s_packet(c2s.split(), self.create_buf());
                     }
                 }
             }

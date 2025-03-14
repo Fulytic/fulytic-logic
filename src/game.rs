@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
-use crate::core::{BaseGameLogic, PlayerInfo, bufqueue::BufQueue};
+use crate::core::{BaseGameLogic, PlayerInfo};
 use bytes::BytesMut;
-use fulytic_core::{Codec, GameJoinS2C};
-use tokio::sync::Mutex;
+use fulytic_core::{Codec, GameJoinS2C, PlayerBuf};
 use uuid::Uuid;
 
 #[cfg_attr(feature = "bevy", derive(bevy::prelude::Component))]
@@ -47,13 +46,7 @@ impl Game {
         forwarding!(self, game => game.forced_termination().await)
     }
 
-    pub fn decode_c2s_packet(
-        &self,
-        packet: BytesMut,
-        sernder: tokio::sync::mpsc::Sender<()>,
-        player: Arc<PlayerInfo>,
-        bufqueue: Arc<Mutex<BufQueue>>,
-    ) -> bool {
-        forwarding!(self, game => game.clone().decode_c2s_packet(packet,sernder, player,bufqueue))
+    pub fn decode_c2s_packet(&self, packet: BytesMut, buf: PlayerBuf) -> bool {
+        forwarding!(self, game => game.clone().decode_c2s_packet(packet,buf))
     }
 }

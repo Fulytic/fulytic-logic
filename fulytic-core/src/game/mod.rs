@@ -2,11 +2,10 @@ use std::{num::NonZeroUsize, sync::Arc};
 
 use crate::{
     codec::{Codec, GameC2S, GameS2C},
-    BufQueue, GameJoinS2C, GameS2CQueue, PlayerInfo,
+    GameJoinS2C, PlayerBuf, PlayerInfo,
 };
 use bytes::BytesMut;
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
 use uuid::Uuid;
 
 pub mod limit;
@@ -39,17 +38,10 @@ pub trait BaseGameLogic: Sized + Send + Sync + 'static {
 
     async fn forced_termination(&self);
 
-    fn decode_c2s_packet(
-        self: Arc<Self>,
-        packet: BytesMut,
-        sernder: tokio::sync::mpsc::Sender<()>,
-        player: Arc<PlayerInfo>,
-        bufqueue: Arc<Mutex<BufQueue>>,
-    ) -> bool {
+    fn decode_c2s_packet(self: Arc<Self>, packet: BytesMut, buf: PlayerBuf) -> bool {
         match Self::C2S::decode(&packet) {
             Ok((ok, _)) => {
-                let bufqueue = GameS2CQueue::<Self>::new(sernder, player, bufqueue);
-                tokio::spawn(Self::C2S::apply_server(ok, self, bufqueue));
+                tokio::spawn(Self::C2S::apply_server(ok, self, buf.into_typed()));
                 true
             }
             Err(_) => false,
