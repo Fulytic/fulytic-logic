@@ -1,9 +1,23 @@
-use crate::Game;
+use fulytic_core::{GameJoinC2S, GameJoinS2C};
+
+use crate::{Game, GameCreateC2S, GameCreateS2C};
 
 #[derive(Debug, Clone)]
 pub enum ClientStat {
     Waiting,
     Playing(Game),
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum WaitingC2S {
+    GameJoin(GameJoinC2S),
+    GameCreate(GameCreateC2S),
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum WaitingS2C {
+    GameJoin(GameJoinS2C),
+    GameCreate(GameCreateS2C),
 }
 
 #[cfg(test)]
