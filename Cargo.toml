@@ -31,11 +31,11 @@ name = "fulytic_logic"
 [workspace]
 resolver = "2"
 members = [
-    "client",
+    "app/client",
+    "app/server",
     "fulytic-core",
     "fulytic-macros",
     "games/fulytic-othello",
-    "server",
 ]
 
 [workspace.package]
