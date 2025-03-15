@@ -25,18 +25,30 @@ def_local_fmt!(
     lang_folder = "langs"
 );
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum OthelloGameStat {
+    Started {
+        black: PlayerInfo,
+        white: PlayerInfo,
+    },
+    Waiting {
+        black: Option<PlayerInfo>,
+        white: Option<PlayerInfo>,
+    },
+}
+
 #[derive(Debug)]
 pub struct OthelloGame {
     id: Uuid,
     // 0 is black, 1 is white
-    players: RwLock<Vec<PlayerInfo>>,
+    stat: RwLock<OthelloGameStat>,
     black: AtomicU64,
     white: AtomicU64,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RawOthelloGameData {
-    players: Vec<PlayerInfo>,
+    stat: OthelloGameStat,
     black: u64,
     white: u64,
 }
@@ -60,7 +72,10 @@ impl BaseGameLogic for OthelloGame {
     fn new(id: Uuid) -> Self {
         Self {
             id,
-            players: Default::default(),
+            stat: RwLock::new(OthelloGameStat::Waiting {
+                black: None,
+                white: None,
+            }),
             black: AtomicU64::new(0x0000000810000000),
             white: AtomicU64::new(0x0000001008000000),
         }
@@ -68,7 +83,7 @@ impl BaseGameLogic for OthelloGame {
 
     async fn raw_data(&self) -> Self::RawGameData {
         RawOthelloGameData {
-            players: self.players.read().await.clone(),
+            stat: self.stat.read().await.clone(),
             black: self.black.load(Ordering::Relaxed),
             white: self.white.load(Ordering::Relaxed),
         }
@@ -77,7 +92,7 @@ impl BaseGameLogic for OthelloGame {
     fn new_with_raw_data(id: Uuid, data: Self::RawGameData) -> Self {
         Self {
             id,
-            players: RwLock::new(data.players),
+            stat: RwLock::new(data.stat),
             black: AtomicU64::new(data.black),
             white: AtomicU64::new(data.white),
         }
@@ -88,12 +103,19 @@ impl BaseGameLogic for OthelloGame {
     }
 
     async fn join(&self, player: PlayerInfo) -> Result<(), GameJoinS2C> {
-        let len = self.players.read().await.len();
-        if Self::info().is_ok_max_players(len + 1) {
-            self.players.write().await.push(player.clone());
-            Ok(())
-        } else {
-            return Err(GameJoinS2C::AlreadyMaxPlayers);
+        match &mut *self.stat.write().await {
+            OthelloGameStat::Waiting { black, white } => {
+                if black.is_none() {
+                    *black = Some(player);
+                    Ok(())
+                } else if white.is_none() {
+                    *white = Some(player);
+                    Ok(())
+                } else {
+                    Err(GameJoinS2C::AlreadyMaxPlayers)
+                }
+            }
+            OthelloGameStat::Started { .. } => Err(GameJoinS2C::AlreadyStarted),
         }
     }
 
