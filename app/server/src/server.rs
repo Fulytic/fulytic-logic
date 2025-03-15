@@ -52,19 +52,20 @@ impl Server {
         let Some(game) = self.games.read().await.get(&packet.game_uuid).cloned() else {
             return GameJoinS2C::MissingGameId;
         };
-        {
-            let map = self.clients.read().await;
-            let Some(client) = map.get(&packet.player.id) else {
-                return GameJoinS2C::MissingPlayerInfo;
-            };
-            client.change_stat(ClientStat::Playing(game.clone())).await;
-        }
+
+        let Some(client) = self.clients.read().await.get(&packet.player.id).cloned() else {
+            return GameJoinS2C::MissingPlayerInfo;
+        };
+
         if let Err(err) = game.join(packet.player).await {
             return err;
         };
         let Some(raw_data) = game.raw_data().await else {
             return GameJoinS2C::ServerError;
         };
+
+        client.change_stat(ClientStat::Playing(game.clone())).await;
+
         GameJoinS2C::RawGameData(raw_data)
     }
 }
