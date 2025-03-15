@@ -66,6 +66,10 @@ impl Server {
 
         client.change_stat(ClientStat::Playing(game.clone())).await;
 
-        GameJoinS2C::RawGameData(raw_data)
+        GameJoinS2C::RawGameData {
+            game_uuid: packet.game_uuid,
+            game_name: packet.game_name,
+            raw_data,
+        }
     }
 }

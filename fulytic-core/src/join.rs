@@ -10,7 +10,12 @@ pub struct GameJoinC2S {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum GameJoinS2C {
-    RawGameData(#[serde(with = "serde_bytes")] Vec<u8>),
+    RawGameData {
+        game_uuid: Uuid,
+        game_name: String,
+        #[serde(with = "serde_bytes")]
+        raw_data: Vec<u8>,
+    },
     MissingGameId,
     MissingPlayerInfo,
     AlreadyStarted,
