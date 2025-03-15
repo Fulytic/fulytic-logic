@@ -1,7 +1,7 @@
 use fulytic_core::{ambassador_impl_GameC2S, GameC2S, GameS2CQueue};
-use login::OthelloSelectCharC2S;
+use select::OthelloSelectCharC2S;
 
-pub mod login;
+pub mod select;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ambassador::Delegate)]
 #[delegate(fulytic_core::GameC2S)]
