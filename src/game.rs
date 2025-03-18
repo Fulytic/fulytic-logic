@@ -6,8 +6,7 @@ use fulytic_core::{Codec, GameJoinS2C, PlayerBuf};
 use uuid::Uuid;
 
 #[cfg_attr(feature = "bevy", derive(bevy::prelude::Component))]
-#[derive(Debug, Clone, more_convert::EnumName)]
-#[enum_name(without_trait)]
+#[derive(Debug, Clone)]
 pub enum Game {
     Othello(Arc<crate::othello::OthelloGame>),
 }

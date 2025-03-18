@@ -75,7 +75,7 @@ tinyvec = "1.9"
 ambassador = "0.4"
 enum-table = "0.2"
 local-fmt = { version = "0.5", features = ["macros", "macros-toml"] }
-more-convert = { version = "0.10" }
+more-convert = { version = "0.11" }
 bytes = "1.10"
 log = "0.4"
 
